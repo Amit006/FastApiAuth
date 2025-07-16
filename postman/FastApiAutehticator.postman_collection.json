@@ -1,0 +1,66 @@
+{
+	"info": {
+		"_postman_id": "bf31f016-9e08-4607-a059-bfebc3fa071b",
+		"name": "FastApiAutehticator",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "643807"
+	},
+	"item": [
+		{
+			"name": "Login(RegisterDevice)",
+			"request": {
+				"method": "POST",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8000/profile",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiZGV2aWNlX2lkIjoiZTMxYjE2ZGM0YWFlMTYyNC0kMmIkMTIkSDN1IiwiZGV2aWNlX3R5cGUiOiJkZXNrdG9wIiwidXNlcl9hZ2VudCI6IlBvc3RtYW5SdW50aW1lLzcuNDQuMSIsImV4cCI6MTc1MjY3ODY4M30.ADKuLdV0ezG51ltrfKcWUWo4sFiKFKtV25ypsFkg0wzrDh0xMskxYLdrviHMuVSJVZzYEFposeiFs4Dykm3HqgqdMOnKbLBA1dJpz_M7OeMW71DUTay85ApyHonjpGmZLixykZoDKMct91Yl313BJR0O24EHV7glQAWhQms5cAJHKfcbEMXbGhlYVbUBHr9b9W4z0aYsEwuj-6eBYxn54CM35RyKQAQmg2DfmE7yc6vjXYGOtzSnPb-_gSxPJTfUp_5dK-EX4MFUcPbD3an8TwAfu_P6pk21I_BGS023FZWRbxNDNO94LmnzuYp3s_RUJyxnjRVtkkmlg5DRM5DSOA"
+					}
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer <ACCESS_TOKEN>"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
+				"url": "http://localhost:8000/profile"
+			},
+			"response": []
+		},
+		{
+			"name": "sensitive-action",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiZGV2aWNlX2lkIjoiZTMxYjE2ZGM0YWFlMTYyNC0kMmIkMTIkSDN1IiwiZGV2aWNlX3R5cGUiOiJkZXNrdG9wIiwidXNlcl9hZ2VudCI6IlBvc3RtYW5SdW50aW1lLzcuNDQuMSIsImV4cCI6MTc1MjY3ODY4M30.ADKuLdV0ezG51ltrfKcWUWo4sFiKFKtV25ypsFkg0wzrDh0xMskxYLdrviHMuVSJVZzYEFposeiFs4Dykm3HqgqdMOnKbLBA1dJpz_M7OeMW71DUTay85ApyHonjpGmZLixykZoDKMct91Yl313BJR0O24EHV7glQAWhQms5cAJHKfcbEMXbGhlYVbUBHr9b9W4z0aYsEwuj-6eBYxn54CM35RyKQAQmg2DfmE7yc6vjXYGOtzSnPb-_gSxPJTfUp_5dK-EX4MFUcPbD3an8TwAfu_P6pk21I_BGS023FZWRbxNDNO94LmnzuYp3s_RUJyxnjRVtkkmlg5DRM5DSOA"
+					}
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Confirmation",
+						"value": "yes",
+						"type": "text"
+					}
+				],
+				"url": "http://localhost:8000/sensitive-action"
+			},
+			"response": []
+		}
+	]
+}
