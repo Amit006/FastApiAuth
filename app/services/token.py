@@ -1,4 +1,5 @@
 import time
+import secrets
 import jwt
 from app.core.config import settings
 
@@ -28,6 +29,7 @@ def create_refresh_token(user_id: str, absolute_exp: int | None = None) -> tuple
         "type": "refresh",
         "exp": exp,
         "absolute_exp": absolute_exp,
+        "jti": secrets.token_hex(16),
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return token, absolute_exp

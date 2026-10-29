@@ -22,6 +22,6 @@ def client(fake_redis):
         return RedisTokenStore(fake_redis)
 
     app.dependency_overrides[get_redis_store] = override
-    with TestClient(app, raise_server_exceptions=True) as c:
+    with TestClient(app, raise_server_exceptions=True, base_url="https://testserver") as c:
         yield c
     app.dependency_overrides.clear()
