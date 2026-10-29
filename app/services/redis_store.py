@@ -29,6 +29,29 @@ class RedisTokenStore:
         ttl = self._r.ttl(f"rt:{token}")
         self._r.set(f"rt:{token}", json.dumps(data), ex=max(1, ttl))
 
+    def mark_used_if_unused(self, token: str) -> int:
+        key = f"rt:{token}"
+        with self._r.pipeline() as pipe:
+            while True:
+                try:
+                    pipe.watch(key)
+                    raw = pipe.get(key)
+                    if raw is None:
+                        pipe.reset()
+                        return 0
+                    data = json.loads(raw)
+                    if data["is_used"]:
+                        pipe.reset()
+                        return -1
+                    data["is_used"] = True
+                    ttl = pipe.ttl(key)
+                    pipe.multi()
+                    pipe.set(key, json.dumps(data), ex=max(1, ttl))
+                    pipe.execute()
+                    return 1
+                except redis_lib.WatchError:
+                    continue
+
     def revoke_all(self, user_id: str) -> None:
         tokens = self._r.smembers(f"user_tokens:{user_id}")
         for token in tokens:

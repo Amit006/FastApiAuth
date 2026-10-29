@@ -139,6 +139,27 @@ def test_logout_no_session_returns_401(client):
     assert resp.status_code == 401
 
 
+def test_login_cookie_has_max_age(client):
+    resp = client.post(
+        "/api/v1/auth/login",
+        json={"username": "developer", "password": "secure_pass"},
+    )
+    assert resp.status_code == 200
+    set_cookie = resp.headers.get("set-cookie", "")
+    assert "max-age=" in set_cookie.lower()
+
+
+def test_refresh_cookie_has_max_age(client):
+    client.post(
+        "/api/v1/auth/login",
+        json={"username": "developer", "password": "secure_pass"},
+    )
+    resp = client.post("/api/v1/auth/refresh")
+    assert resp.status_code == 200
+    set_cookie = resp.headers.get("set-cookie", "")
+    assert "max-age=" in set_cookie.lower()
+
+
 def test_refresh_expired_absolute_exp_returns_401(client, fake_redis):
     import time
     import jwt as pyjwt

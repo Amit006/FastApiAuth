@@ -1,3 +1,4 @@
+import time
 from fastapi import APIRouter, HTTPException, Response, Cookie, Depends
 from app.models.auth import LoginPayload, TokenResponse, SessionResponse
 from app.services.token import create_access_token, create_refresh_token, decode_token
@@ -37,6 +38,7 @@ async def login(
         secure=True,
         samesite="lax",
         path="/",
+        max_age=absolute_exp - int(time.time()),
     )
 
     return TokenResponse(accessToken=create_access_token(user_id))
@@ -64,24 +66,20 @@ async def refresh(
     user_id: str = payload["sub"]
     absolute_exp: int = payload["absolute_exp"]
 
-    import time as _time
-    if _time.time() > absolute_exp:
+    if time.time() > absolute_exp:
         store.revoke_all(user_id)
         raise HTTPException(status_code=401, detail="Session expired. Please log in again.")
 
-    metadata = store.get(refresh_token)
-    if metadata is None:
+    result = store.mark_used_if_unused(refresh_token)
+    if result == 0:
         raise HTTPException(status_code=401, detail="Session invalid or revoked.")
-
-    if metadata["is_used"]:
+    if result == -1:
         store.revoke_all(user_id)
         response.delete_cookie(key="refresh_token", path="/")
         raise HTTPException(
             status_code=403,
             detail="Security breach detected. All sessions have been revoked.",
         )
-
-    store.mark_used(refresh_token)
 
     new_refresh_token, _ = create_refresh_token(user_id, absolute_exp=absolute_exp)
     store.save(new_refresh_token, user_id, absolute_exp)
@@ -93,6 +91,7 @@ async def refresh(
         secure=True,
         samesite="lax",
         path="/",
+        max_age=absolute_exp - int(time.time()),
     )
 
     return TokenResponse(accessToken=create_access_token(user_id))
@@ -119,8 +118,7 @@ async def session(
     user_id: str = payload["sub"]
     absolute_exp: int = payload["absolute_exp"]
 
-    import time as _time
-    if _time.time() > absolute_exp:
+    if time.time() > absolute_exp:
         raise HTTPException(status_code=401, detail="Session expired.")
 
     if store.get(refresh_token) is None:

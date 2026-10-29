@@ -45,3 +45,32 @@ def test_revoke_all_wipes_only_target_user(store):
 
 def test_revoke_all_on_user_with_no_tokens_does_not_raise(store):
     store.revoke_all("user_nobody")
+
+
+def test_mark_used_if_unused_marks_fresh_token(store):
+    absolute_exp = int(time.time()) + 3600
+    store.save("tok1", "user_1", absolute_exp)
+    result = store.mark_used_if_unused("tok1")
+    assert result == 1
+    assert store.get("tok1")["is_used"] is True
+
+
+def test_mark_used_if_unused_rejects_already_used_token(store):
+    absolute_exp = int(time.time()) + 3600
+    store.save("tok1", "user_1", absolute_exp)
+    store.mark_used_if_unused("tok1")
+    result = store.mark_used_if_unused("tok1")
+    assert result == -1
+
+
+def test_mark_used_if_unused_returns_zero_for_missing_token(store):
+    result = store.mark_used_if_unused("nonexistent")
+    assert result == 0
+
+
+def test_get_redis_store_reuses_connection_pool():
+    import app.core.dependencies as dep
+    assert hasattr(dep, "_pool"), "dependencies module must have a module-level _pool"
+    store1 = dep.get_redis_store()
+    store2 = dep.get_redis_store()
+    assert store1._r.connection_pool is store2._r.connection_pool
