@@ -96,3 +96,57 @@ async def refresh(
     )
 
     return TokenResponse(accessToken=create_access_token(user_id))
+
+
+@router.get("/session", response_model=SessionResponse)
+async def session(
+    refresh_token: str | None = Cookie(None),
+    store: RedisTokenStore = Depends(get_redis_store),
+):
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Session token missing.")
+
+    try:
+        payload = decode_token(refresh_token)
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Session expired.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token.")
+
+    if payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid token type.")
+
+    user_id: str = payload["sub"]
+    absolute_exp: int = payload["absolute_exp"]
+
+    import time as _time
+    if _time.time() > absolute_exp:
+        raise HTTPException(status_code=401, detail="Session expired.")
+
+    if store.get(refresh_token) is None:
+        raise HTTPException(status_code=401, detail="Session invalid or revoked.")
+
+    return SessionResponse(
+        userId=user_id,
+        username=_USER_ID_TO_NAME.get(user_id, user_id),
+        accessToken=create_access_token(user_id),
+        absoluteExp=absolute_exp,
+    )
+
+
+@router.post("/logout", status_code=204)
+async def logout(
+    response: Response,
+    refresh_token: str | None = Cookie(None),
+    store: RedisTokenStore = Depends(get_redis_store),
+):
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="No active session.")
+
+    try:
+        payload = decode_token(refresh_token)
+        store.revoke_all(payload["sub"])
+    except jwt.InvalidTokenError:
+        pass  # Token already invalid — still clear the cookie
+
+    response.delete_cookie(key="refresh_token", path="/")

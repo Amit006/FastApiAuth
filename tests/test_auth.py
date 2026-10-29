@@ -89,6 +89,56 @@ def test_refresh_wrong_token_type_returns_401(client):
     assert resp.status_code == 401
 
 
+def test_session_returns_user_and_access_token(client):
+    client.post(
+        "/api/v1/auth/login",
+        json={"username": "developer", "password": "secure_pass"},
+    )
+    resp = client.get("/api/v1/auth/session")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["userId"] == "user_456"
+    assert data["username"] == "developer"
+    assert "accessToken" in data
+    assert "absoluteExp" in data
+
+
+def test_session_no_cookie_returns_401(client):
+    resp = client.get("/api/v1/auth/session")
+    assert resp.status_code == 401
+
+
+def test_session_wrong_token_type_returns_401(client):
+    from app.services.token import create_access_token
+    client.cookies.set("refresh_token", create_access_token("user_456"))
+    resp = client.get("/api/v1/auth/session")
+    assert resp.status_code == 401
+
+
+def test_logout_returns_204(client):
+    client.post(
+        "/api/v1/auth/login",
+        json={"username": "developer", "password": "secure_pass"},
+    )
+    resp = client.post("/api/v1/auth/logout")
+    assert resp.status_code == 204
+
+
+def test_logout_clears_cookie_and_invalidates_session(client):
+    client.post(
+        "/api/v1/auth/login",
+        json={"username": "developer", "password": "secure_pass"},
+    )
+    client.post("/api/v1/auth/logout")
+    resp = client.get("/api/v1/auth/session")
+    assert resp.status_code == 401
+
+
+def test_logout_no_session_returns_401(client):
+    resp = client.post("/api/v1/auth/logout")
+    assert resp.status_code == 401
+
+
 def test_refresh_expired_absolute_exp_returns_401(client, fake_redis):
     import time
     import jwt as pyjwt
