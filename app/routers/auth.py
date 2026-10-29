@@ -121,8 +121,13 @@ async def session(
     if time.time() > absolute_exp:
         raise HTTPException(status_code=401, detail="Session expired.")
 
-    if store.get(refresh_token) is None:
+    token_data = store.get(refresh_token)
+    if token_data is None:
         raise HTTPException(status_code=401, detail="Session invalid or revoked.")
+    if token_data.get("is_used"):
+        # Token has been rotated — treat as reuse and revoke all sessions
+        store.revoke_all(user_id)
+        raise HTTPException(status_code=403, detail="Security breach detected. All sessions have been revoked.")
 
     return SessionResponse(
         userId=user_id,
